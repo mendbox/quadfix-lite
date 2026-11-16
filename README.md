@@ -1,14 +1,14 @@
 # QuadFix Lite — Blender add-on: n-gons to quads, tris to quads, boolean & import cleanup
 
-[![Blender 4.2+](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://github.com/quadfix-tools/quadfix-lite/releases/latest)
+[![Blender 4.2+](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://github.com/mendbox/quadfix-lite/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/quadfix-tools/quadfix-lite)](https://github.com/quadfix-tools/quadfix-lite/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/mendbox/quadfix-lite)](https://github.com/mendbox/quadfix-lite/releases/latest)
 
 **Full version — all 6 tools: Fill Holes with Quads, Bridge to Quads, Union to Quads, N-gons to Quads, Clean & Quad, Select Non-Quads & Holes → [Gumroad](https://quadfix.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
 
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
-[Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/h_6LSHC6sQY)
+[Download the latest release](https://github.com/mendbox/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/h_6LSHC6sQY)
 
 ![Blender fill holes with quads: QuadFix closes holes with a clean quad grid instead of a triangle fan](docs/media/quadfix-holes.gif)
 *Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://quadfix.gumroad.com/l/quadfix).*
@@ -65,7 +65,7 @@ These need the full version, they are not in Lite.
 
 ## Install (Blender 4.2 and newer)
 
-1. Download the zip from the [Releases](https://github.com/quadfix-tools/quadfix-lite/releases/latest) page. **Do not unzip it.**
+1. Download the zip from the [Releases](https://github.com/mendbox/quadfix-lite/releases/latest) page. **Do not unzip it.**
 2. In Blender open **Edit > Preferences > Get Extensions**, click the small arrow menu at the top right and choose **Install from Disk**, then pick the zip.
 3. In the 3D viewport press `Tab` (Edit Mode), press `N` and open the **QuadFix Lite** tab.
 

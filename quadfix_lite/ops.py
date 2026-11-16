@@ -1,5 +1,5 @@
 # QuadFix Lite - N-gons to quads and mesh cleanup for Blender.
-# Copyright (C) 2026 QuadFix Tools
+# Copyright (C) 2026 Mendbox Studio
 # SPDX-License-Identifier: GPL-3.0-or-later
 import bpy
 import bmesh
