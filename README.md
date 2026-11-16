@@ -10,8 +10,8 @@ QuadFix Lite is a free, open-source Blender add-on that converts triangles and n
 
 [Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/5JQXl0a_Ir8)
 
-![Blender scan mesh with triangles converted to quads by QuadFix Lite: before in red, after mostly quads](docs/scan_to_quads.jpg)
-*Triangulated scan-like mesh: before (red = non-quads) and after N-gons to Quads. Red faces left in the result are the ones that are still not quads.*
+![Blender fill holes with quads: QuadFix closes holes with a clean quad grid instead of a triangle fan](docs/media/quadfix-holes.gif)
+*Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://quadfix.gumroad.com/l/quadfix).*
 
 ## What Lite does
 
