@@ -147,7 +147,7 @@ No. Pure Python with Blender's own `bmesh`, no internet access, no dependencies.
 
 ## License
 
-GPL-3.0-or-later, see [LICENSE](LICENSE). Support: support@dynamicflower.pt
+GPL-3.0-or-later, see [LICENSE](LICENSE). Support: support@mendboxstudio.com
 
 ---
 *Keywords: Blender add-on, Blender extension, tris to quads, n-gons to quads, convert triangles to quads, fill holes with quads, clean up mesh after boolean, select non-quads, mesh cleanup, STL import cleanup, 3D scan cleanup, AI generated mesh cleanup, Meshy, Tripo, Hunyuan3D.*
