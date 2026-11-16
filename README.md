@@ -8,7 +8,7 @@
 
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
-[Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/SqnK_UPWMsI)
+[Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/h_6LSHC6sQY)
 
 ![Blender fill holes with quads: QuadFix closes holes with a clean quad grid instead of a triangle fan](docs/media/quadfix-holes.gif)
 *Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://quadfix.gumroad.com/l/quadfix).*
