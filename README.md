@@ -4,7 +4,7 @@
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/quadfix-tools/quadfix-lite)](https://github.com/quadfix-tools/quadfix-lite/releases/latest)
 
-**Full version with Fill Holes with Quads and Union to Quads → [Gumroad](https://quadfix.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
+**Full version — all 6 tools: Fill Holes with Quads, Bridge to Quads, Union to Quads, N-gons to Quads, Clean & Quad, Select Non-Quads & Holes → [Gumroad](https://quadfix.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
 
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
