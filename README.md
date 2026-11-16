@@ -8,7 +8,7 @@
 
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
-[Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/5JQXl0a_Ir8)
+[Download the latest release](https://github.com/quadfix-tools/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/SqnK_UPWMsI)
 
 ![Blender fill holes with quads: QuadFix closes holes with a clean quad grid instead of a triangle fan](docs/media/quadfix-holes.gif)
 *Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://quadfix.gumroad.com/l/quadfix).*
@@ -46,11 +46,6 @@ Lite stays free and complete for everything marked "yes". Get the full version o
 ![Blender boolean cleanup: cube with boolean cut cleaned to quad topology with Clean and Quad](docs/media/quadfix-clean.gif)
 *Boolean cleanup: merge, dissolve, n-gons to quads in one click.*
 
-![Blender boolean result cleaned up: messy n-gons and triangles turned into clean quads](docs/media/quadfix-boolean.gif)
-*Clean up a Boolean result: triangles and n-gons around the cut turned into quads.*
-
-![Blender boolean cleanup before and after with Clean & Quad](docs/boolean_cleanup.jpg)
-*Boolean cut result before and after Clean & Quad.*
 
 ## Gallery (Full version only)
 
