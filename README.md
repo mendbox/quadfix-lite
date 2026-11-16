@@ -1,5 +1,7 @@
 # QuadFix Lite — Blender add-on: n-gons to quads, tris to quads, boolean & import cleanup
 
+Website: https://mendboxstudio.com/addons/quadfix · Full manual: https://mendboxstudio.com/docs/quadfix
+
 [![Blender 4.2+](https://img.shields.io/badge/Blender-4.2%2B-orange)](https://github.com/mendbox/quadfix-lite/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/mendbox/quadfix-lite)](https://github.com/mendbox/quadfix-lite/releases/latest)
