@@ -149,13 +149,21 @@ class QUADFIXLITE_OT_clean(Operator):
         if p.keep_planar:
             bm.normal_update()  # normals are stale after remove_doubles / dissolve_degenerate
             protected = {f for f in bm.faces if sel(f) and len(f.verts) > 4 and _is_planar(f, 0.01)}
+        if p.only_selected:
+            # an edge or vertex on the border of the selection is selected too, but dissolving it would merge
+            # an unselected neighbour face into the selection and leave an unselected n-gon behind
+            edges = [e for e in edges if all(f.select for f in e.link_faces)]
+            verts = [v for v in verts if all(f.select for f in v.link_faces)]
+        # none of these faces is dissolved now, so the references stay valid
+        outside = {f for f in bm.faces if not f.select} if p.only_selected else set()
         bmesh.ops.dissolve_limit(bm, angle_limit=p.dissolve_angle, use_dissolve_boundaries=False,
                                  verts=verts, edges=edges, delimit={"SHARP", "SEAM"} if p.keep_sharp else set())
         protected = {f for f in protected if f.is_valid}
         # faces created by the dissolve are unselected in face select mode: select them
         # when all their vertices are selected, so "Only Selected" keeps working
+        # (a face that was unselected before stays out, even when its neighbours make all its vertices selected)
         for f in bm.faces:
-            if not f.select and all(v.select for v in f.verts):
+            if not f.select and f not in outside and all(v.select for v in f.verts):
                 f.select = True
         # n-gons created by the dissolve itself are always converted; original flat n-gons stay
         faces = [f for f in bm.faces if sel(f) and len(f.verts) != 4 and f not in protected]

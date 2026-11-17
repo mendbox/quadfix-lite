@@ -23,6 +23,27 @@ def face_hash(obj, pred=lambda f: True):
     return h.hexdigest()
 
 
+def _face_key(f):
+    """Vertex cycle of a face, rounded, rotated to start at its smallest vertex (direction kept: a flip shows)."""
+    cs = [tuple(round(c, 5) for c in v.co) for v in f.verts]
+    i = cs.index(min(cs))
+    return tuple(cs[i:] + cs[:i])
+
+
+def unselected_faces(obj):
+    """Edit Mode: keys of all faces that are not selected. An operator limited to the selection must keep
+    every one of them exactly: no tolerance band next to the selection border."""
+    bm = bmesh.from_edit_mesh(obj.data)
+    return {_face_key(f) for f in bm.faces if not f.select}
+
+
+def all_faces(obj):
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    keys = {_face_key(f) for f in bm.faces}
+    bm.free()
+    return keys
+
+
 def mesh_report(obj):
     bm = bmesh.new(); bm.from_mesh(obj.data); bm.normal_update()
     r = dict(faces=len(bm.faces),
@@ -87,6 +108,7 @@ def run_case(name, maker, op, variants=("all", "half"), modes=("V", "F"), expect
                 bpy.context.tool_settings.mesh_select_mode = MODES[mode]
                 untouched = select_variant(obj, variant)
                 h_before = face_hash(obj, untouched) if untouched else None
+                unsel = unselected_faces(obj) if variant != "all" else set()
                 t = time.time()
                 res = op()
                 dt = time.time() - t
@@ -109,6 +131,9 @@ def run_case(name, maker, op, variants=("all", "half"), modes=("V", "F"), expect
                     errs.append(f"attributes changed {a0}→{a1}")
                 if untouched and face_hash(obj, untouched) != h_before:
                     errs.append("faces outside the selection were modified")
+                lost = unsel - all_faces(obj) if unsel else ()
+                if lost:
+                    errs.append(f"{len(lost)} unselected faces were modified or removed")
                 if after["radius"] > before["radius"] * 1.15 + 1e-6:
                     errs.append(f"geometry exploded: radius {before['radius']:.3f}→{after['radius']:.3f}")
                 if dt > timeout:
