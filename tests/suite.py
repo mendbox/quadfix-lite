@@ -1,7 +1,7 @@
 """QuadFix Lite assertion suite. Run: blender -b --factory-startup --python tests/suite.py [-- --quick]
 Exit code 1 on any failure. Every case runs under a matrix of select modes and
 selection variants; every result is checked against mesh invariants."""
-import bpy, bmesh, sys, os, time, math, traceback, hashlib
+import bpy, bmesh, sys, os, time, math, traceback, hashlib, re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT); sys.path.insert(0, os.path.join(ROOT, "tests"))
 import quadfix_lite
@@ -33,21 +33,23 @@ def _face_key(f, uvs=()):
     return (f.material_index, tuple(cs[i:] + cs[:i]))
 
 
-def unselected_faces(obj):
-    """Edit Mode: keys of all faces that are not selected. No tolerance band next to the selection border."""
+def unselected_faces(obj, hidden=False):
+    """Edit Mode: keys of all faces the operator may not touch: the unselected ones, or (Only Selected off) the
+    hidden ones. No tolerance band next to the border."""
     bm = bmesh.from_edit_mesh(obj.data)
     uvs = bm.loops.layers.uv.values()
-    return {_face_key(f, uvs) for f in bm.faces if not f.select}
+    return {_face_key(f, uvs) for f in bm.faces if (f.hide if hidden else not f.select)}
 
 
 def all_faces(obj):
-    """Object Mode: key -> selected, for every face."""
+    """Object Mode: key -> (selected, visible), for every face."""
     bm = bmesh.new(); bm.from_mesh(obj.data)
     uvs = bm.loops.layers.uv.values()
     keys = {}
     for f in bm.faces:
         k = _face_key(f, uvs)
-        keys[k] = keys.get(k, False) or f.select
+        a, b = keys.get(k, (False, False))
+        keys[k] = (a or f.select, b or not f.hide)
     bm.free()
     return keys
 
@@ -97,6 +99,16 @@ def select_variant(obj, variant):
     if variant == "none":
         bpy.ops.mesh.select_all(action="DESELECT")
         return lambda f: True
+    if variant == "hidden":
+        # Only Selected off (the whole mesh) with the x <= 0 half hidden: hidden geometry is never worked on
+        bpy.context.scene.quadfix_lite.only_selected = False
+        bpy.ops.mesh.select_all(action="DESELECT")
+        bm = bmesh.from_edit_mesh(obj.data)
+        for f in bm.faces:
+            if f.calc_center_median().x <= 0:
+                f.hide_set(True)
+        bmesh.update_edit_mesh(obj.data)
+        return lambda f: f.calc_center_median().x < -0.05
 
 
 def run_case(name, maker, op, variants=("all", "half"), modes=("V", "E", "F"), expect=None, timeout=60):
@@ -116,12 +128,15 @@ def run_case(name, maker, op, variants=("all", "half"), modes=("V", "E", "F"), e
                 before = mesh_report(obj); a0 = attrs(obj)
                 bpy.ops.object.mode_set(mode="EDIT")
                 bpy.context.tool_settings.mesh_select_mode = MODES[mode]
+                if "merge_dist" in expect:
+                    bpy.context.scene.quadfix_lite.merge_dist = expect["merge_dist"]
                 untouched = select_variant(obj, variant)
                 h_before = face_hash(obj, untouched) if untouched else None
-                unsel = unselected_faces(obj) if variant != "all" else set()
+                unsel = unselected_faces(obj, hidden=variant == "hidden") if variant != "all" else set()
                 t = time.time()
                 res = op()
                 dt = time.time() - t
+                msg = bpy.context.scene.quadfix_lite.report
                 bpy.ops.object.mode_set(mode="OBJECT")
                 after = mesh_report(obj); a1 = attrs(obj)
                 errs = []
@@ -141,22 +156,33 @@ def run_case(name, maker, op, variants=("all", "half"), modes=("V", "E", "F"), e
                     errs.append(f"attributes changed {a0}→{a1}")
                 if untouched and face_hash(obj, untouched) != h_before:
                     errs.append("faces outside the selection were modified")
-                now = all_faces(obj) if unsel else {}
+                now = all_faces(obj)
                 lost = [k for k in unsel if k not in now]
                 if lost:
                     errs.append(f"{len(lost)} unselected faces were modified or removed (shape, UVs, material, seam or sharp)")
                 if "select_ok" not in expect:
-                    picked = [k for k in unsel if now.get(k)]
+                    picked = [k for k in unsel if k in now and now[k][0]]
                     if picked:
                         errs.append(f"{len(picked)} unselected faces came back selected")
-                if variant == "all" and (op is CLEAN or op is NGONS):
-                    # the faces the operator rebuilds replace selected ones: everything stays selected
-                    dropped = sum(1 for f in obj.data.polygons if not f.select)
+                if variant == "hidden":
+                    shown = [k for k in unsel if k in now and now[k][1]]
+                    if shown:
+                        errs.append(f"{len(shown)} hidden faces came back visible")
+                    if any(f.hide and f.select for f in obj.data.polygons):
+                        errs.append("hidden faces selected")
+                if variant in ("all", "half") and (op is CLEAN or op is NGONS):
+                    # the faces the operator rebuilds replace selected ones: whatever was not unselected before
+                    # is selected afterwards, in every select mode
+                    dropped = sum(1 for k, (chosen, _) in now.items() if k not in unsel and not chosen)
                     if dropped:
                         errs.append(f"{dropped} faces lost their selection")
+                if op is CLEAN and variant in ("all", "half") and "Nothing cleaned" in msg:
+                    errs.append(f"selected faces, but the report says {msg!r}")
+                if len(objs) == 1 and ("more object" in msg or " objects: " in msg):
+                    errs.append(f"one object in Edit Mode, but the report says {msg!r}")
                 if after["bad_wind"] > before["bad_wind"]:
                     errs.append(f"flipped faces: edges with inconsistent winding {before['bad_wind']}→{after['bad_wind']}")
-                if variant == "half" and "half_cleans" in expect:
+                if variant in ("half", "hidden") and "half_cleans" in expect:
                     # a no-op must not pass: the selected half has to lose non-quads (the other half can not change)
                     nq = lambda r: r["tris"] + r["ngons"]
                     if not nq(after) < nq(before):
@@ -167,7 +193,7 @@ def run_case(name, maker, op, variants=("all", "half"), modes=("V", "E", "F"), e
                     errs.append(f"took {dt:.1f}s > {timeout}s")
                 if variant == "all":
                     for k, v in expect.items():
-                        if k in ("loose_ok", "folds_ok", "cancel_ok", "half_cleans", "select_ok"): continue
+                        if k in ("loose_ok", "folds_ok", "cancel_ok", "half_cleans", "select_ok", "merge_dist"): continue
                         if callable(v):
                             if not v(before, after): errs.append(f"expect {k} failed: {after}")
                         elif after.get(k) != v:
@@ -216,34 +242,127 @@ def single_edge_case():
         FAILS.append((label, [traceback.format_exc().splitlines()[-1]], None, None)); print(f"ERROR {label}:\n" + traceback.format_exc())
 
 
-def multi_case(name, maker, op, changed=False, selects=False, warns=None):
-    """Two objects in Edit Mode, everything selected. changed: the operator works on both; selects: it leaves a
-    selection in both; warns: it works on the active one only and the report says so with this text."""
+def multi_case(name, maker, op, changed=False, selects=False, warns=None, half=False, summed=False, undo=False,
+               shared=False, cancels=False):
+    """Two objects in Edit Mode, everything selected (half: the x > 0 half of each). changed: the operator works
+    on both; selects: it leaves a selection in both; warns: it works on the active one only and the report says
+    so with this text; cancels: nothing to do, and the report still has the `warns` text; summed: the report
+    carries the vertex counts of both objects together; undo: one undo step restores both; shared: both objects
+    use one mesh, which is one object's worth of work with no word about a second object."""
     label = f"two objects {name}"
     try:
         reset(); objs = list(maker())
         for o in objs: o.select_set(True)
         bpy.context.view_layer.objects.active = objs[0]
         h0 = [face_hash(o) for o in objs]
+        nv0 = [len(o.data.vertices) for o in objs]
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.context.tool_settings.mesh_select_mode = MODES["F"]
         bpy.ops.mesh.select_all(action="SELECT")
-        op()
+        unsel = []
+        if half:
+            for o in objs:
+                bm = bmesh.from_edit_mesh(o.data)
+                for f in bm.faces:
+                    f.select = f.calc_center_median().x > 0
+                bm.select_flush_mode(); bmesh.update_edit_mesh(o.data)
+                unsel.append(unselected_faces(o))
+        if undo:
+            bpy.ops.ed.undo_push(message="before")
+        res = op()
         msg = bpy.context.scene.quadfix_lite.report
-        bpy.ops.object.mode_set(mode="OBJECT")
         errs = []
+        if undo:
+            bpy.ops.ed.undo_push(message="after")
+            bpy.ops.ed.undo()
+        bpy.ops.object.mode_set(mode="OBJECT")
         for o in objs:
             if o.data.validate(verbose=False): errs.append(f"{o.name}: mesh.validate() had to fix data")
         same = [face_hash(o) == h for o, h in zip(objs, h0)]
-        if changed and any(same): errs.append(f"not every object was processed (unchanged: {same})")
+        if undo:
+            if not all(same): errs.append(f"undo did not restore every object (restored: {same})")
+        elif changed and any(same): errs.append(f"not every object was processed (unchanged: {same})")
+        if half:
+            for o, keys in zip(objs, unsel):
+                now = all_faces(o)
+                bad = [k for k in keys if k not in now or now[k][0]]
+                if bad: errs.append(f"{o.name}: {len(bad)} unselected faces changed or selected")
+        if summed:
+            m = re.match(r"2 objects: verts (\d+)→(\d+),", msg)
+            want = (sum(nv0), sum(len(o.data.vertices) for o in objs))
+            if not m or (int(m.group(1)), int(m.group(2))) != want:
+                errs.append(f"report {msg!r} does not carry the summed vertex counts {want}")
+        if shared:
+            m = re.search(r"verts (\d+)→(\d+),", msg)
+            if "object" in msg: errs.append(f"one mesh, but the report says {msg!r}")
+            if op is CLEAN and (not m or (int(m.group(1)), int(m.group(2))) != (nv0[0], len(objs[0].data.vertices))):
+                errs.append(f"report {msg!r} does not carry the counts of the one mesh")
+            if same[0]: errs.append("the mesh was not processed")
         if selects:
             if not all(same): errs.append("select changed geometry")
             for o in objs:
                 if not any(p.select for p in o.data.polygons) or all(p.select for p in o.data.polygons):
                     errs.append(f"{o.name}: non-quads not selected")
-        if warns:
-            if same[0]: errs.append("the active object was not processed")
-            if warns not in msg: errs.append(f"report does not mention the other object: {msg!r}")
+        if cancels:
+            if "CANCELLED" not in res: errs.append(f"expected a cancel, got {res}")
+            if not all(same): errs.append("a cancelled operator changed the mesh")
+        elif warns and same[0]:
+            errs.append("the active object was not processed")
+        if warns and warns not in msg:
+            errs.append(f"report does not mention the other object: {msg!r}")
+        _passed(label, errs)
+    except Exception:
+        FAILS.append((label, [traceback.format_exc().splitlines()[-1]], None, None)); print(f"ERROR {label}:\n" + traceback.format_exc())
+
+
+def second_run_case():
+    """Clean twice on the same half selection in Face mode: the second run has little left to do, and it must
+    say so with numbers, not with the "nothing cleaned" hint for a selection without faces. The selection the
+    first run leaves must be the whole selected half (nothing dropped, nothing gained)."""
+    label = "clean twice [F/half]"
+    try:
+        reset(); obj = make_ai_like_mesh()
+        obj.select_set(True); bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.context.tool_settings.mesh_select_mode = MODES["F"]
+        select_variant(obj, "half")
+        unsel = unselected_faces(obj)
+        CLEAN(); CLEAN()
+        msg = bpy.context.scene.quadfix_lite.report
+        bpy.ops.object.mode_set(mode="OBJECT")
+        now = all_faces(obj)
+        errs = []
+        if "Nothing cleaned" in msg: errs.append(f"second run reports {msg!r}")
+        bad = [k for k in unsel if k not in now or now[k][0]]
+        if bad: errs.append(f"{len(bad)} unselected faces changed or selected after two runs")
+        dropped = sum(1 for k, (chosen, _) in now.items() if k not in unsel and not chosen)
+        if dropped: errs.append(f"{dropped} faces lost their selection after two runs")
+        _passed(label, errs)
+    except Exception:
+        FAILS.append((label, [traceback.format_exc().splitlines()[-1]], None, None)); print(f"ERROR {label}:\n" + traceback.format_exc())
+
+
+def select_holes_case():
+    """Select Non-Quads & Holes in Face select mode: the hole edges it counts must really be selected (Face mode
+    alone drops selected edges), so Edge select mode is switched on as well."""
+    label = "select bad shows hole edges [F]"
+    try:
+        reset(); obj = make_holed_sphere()
+        obj.select_set(True); bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.context.tool_settings.mesh_select_mode = MODES["F"]
+        bpy.ops.mesh.select_all(action="DESELECT")
+        SELECT()
+        msg = bpy.context.scene.quadfix_lite.report
+        mode = tuple(bpy.context.tool_settings.mesh_select_mode)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bm = bmesh.new(); bm.from_mesh(obj.data)
+        nb = sum(1 for e in bm.edges if e.is_boundary); nsel = sum(1 for e in bm.edges if e.is_boundary and e.select)
+        bm.free()
+        errs = []
+        if nb == 0 or nsel != nb: errs.append(f"{nsel} of {nb} hole edges selected")
+        if f"{nb} boundary edges" not in msg: errs.append(f"report {msg!r} does not count {nb} boundary edges")
+        if not mode[1]: errs.append(f"select mode {mode}: edges not shown")
         _passed(label, errs)
     except Exception:
         FAILS.append((label, [traceback.format_exc().splitlines()[-1]], None, None)); print(f"ERROR {label}:\n" + traceback.format_exc())
@@ -279,20 +398,33 @@ run_case("boolean clean", make_boolean_junk, CLEAN, expect=dict(quads=lambda b, 
 run_case("boolean ngons", make_boolean_junk, NGONS, expect=dict(quads=lambda b, a: a["quads"] >= 129, half_cleans=1))
 run_case("tri scan clean", make_triangulated_scan, CLEAN, expect=dict(quads=lambda b, a: a["quads"] > 380), variants=("all",))
 run_case("tri scan ngons", make_triangulated_scan, NGONS, expect=dict(quads=lambda b, a: a["quads"] > 500), variants=("all",))
-run_case("ai-like ngons", make_ai_like_mesh, NGONS, expect=dict(quads=lambda b, a: a["quads"] > b["faces"] * 0.3, half_cleans=1))
-run_case("ai-like clean", make_ai_like_mesh, CLEAN, expect=dict(half_cleans=1))
+run_case("ai-like ngons", make_ai_like_mesh, NGONS, variants=("all", "half", "hidden"),
+         expect=dict(quads=lambda b, a: a["quads"] > b["faces"] * 0.3, half_cleans=1))
+run_case("ai-like clean", make_ai_like_mesh, CLEAN, variants=("all", "half", "hidden"), expect=dict(half_cleans=1))
 run_case("attributed ngons", make_attributed_holed_sphere, NGONS)
 run_case("attributed clean", make_attributed_holed_sphere, CLEAN)
 run_case("single quad clean", make_single_quad, CLEAN, variants=("all",))
-run_case("select bad", make_holed_sphere, SELECT, variants=("all", "none"), expect=dict(select_ok=1))
+run_case("select bad", make_holed_sphere, SELECT, variants=("all", "none", "hidden"), expect=dict(select_ok=1))
+select_holes_case()
 # ---- partial selection: the selected part is cleaned, nothing else changes (shape, UVs, material, seam, sharp)
 run_case("inside-out clean", make_inside_out_junk, CLEAN, expect=dict(half_cleans=1))
 run_case("short border edge clean", make_short_border_edge, CLEAN, variants=("half",), expect=dict(half_cleans=1))
 run_case("marked ai-like clean", make_marked_ai_like, CLEAN, expect=dict(half_cleans=1))
 run_case("marked ai-like ngons", make_marked_ai_like, NGONS, expect=dict(half_cleans=1))
+run_case("flipped neighbours clean", make_flipped_neighbours, CLEAN, variants=("half",), expect=dict(half_cleans=1))
+# Merge Distance 0.01: the unselected faces are compared to 5 decimals, the short edges are 0.004 long
+run_case("short edge to border clean", make_short_edge_to_border, CLEAN, variants=("half",), expect=dict(half_cleans=1, merge_dist=0.01))
+run_case("needle on border clean", make_needle_on_border, CLEAN, variants=("half",), expect=dict(merge_dist=0.01))
+run_case("grid n-gon ngons", make_grid_ngon, NGONS, expect=dict(ngons=0))
 single_edge_case()
+second_run_case()
 # ---- several objects in Edit Mode
-multi_case("clean", make_two_scans, CLEAN, changed=True)
+multi_case("clean", make_two_scans, CLEAN, changed=True, summed=True)
+multi_case("clean half", make_two_scans, CLEAN, changed=True, half=True, summed=True)
+multi_case("clean undo", make_two_scans, CLEAN, undo=True)
+multi_case("clean linked duplicate", make_linked_scans, CLEAN, shared=True)
+multi_case("ngons linked duplicate", make_linked_scans, NGONS, shared=True)
+multi_case("ngons nothing to convert", make_two_cubes, NGONS, cancels=True, warns="not converted")
 multi_case("select bad", make_two_junk, SELECT, selects=True)
 multi_case("ngons", make_two_junk, NGONS, warns="not converted")
 # ---- nothing selected: must not crash, must not touch anything

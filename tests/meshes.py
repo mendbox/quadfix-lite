@@ -379,3 +379,89 @@ def make_two_scans():
     a = make_triangulated_scan()
     b = make_triangulated_scan(); b.location = (4, 0, 0)
     return a, b
+
+
+def make_flipped_neighbours():
+    """Sphere, half of it triangulated, with two faces flipped just outside the "half" selection (imports often
+    carry a few flipped faces): the selected part faces the right way and must not be turned over to match them."""
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1)
+    obj = bpy.context.object
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if f.calc_center_median().y > 0 and len(f.verts) == 4])
+    flip = [f for f in bm.faces if -0.2 < f.calc_center_median().x < 0 and f.calc_center_median().y < 0
+            and abs(f.calc_center_median().z) < 0.12]
+    assert len(flip) == 2, len(flip)
+    bmesh.ops.reverse_faces(bm, faces=flip)
+    bm.to_mesh(obj.data); bm.free()
+    return obj
+
+
+def _flat(name, coords, faces):
+    bm = bmesh.new()
+    vs = [bm.verts.new((x, y, 0.0)) for x, y in coords]
+    for f in faces:
+        bm.faces.new([vs[i] for i in f])
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me); bm.free()
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    return obj
+
+
+def make_short_edge_to_border():
+    """Flat grid, one vertex pulled to 0.004 from a vertex on x = 0 (the border of the "half" selection): the
+    short edge between them lies inside the selection, but collapsing it would move the border vertex and with
+    it the unselected faces. Used with Merge Distance 0.01."""
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=8, y_segments=8, size=1.0)
+    for v in bm.verts:
+        if abs(v.co.x - 0.25) < 1e-6 and abs(v.co.y) < 1e-6:
+            v.co.x = 0.004
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if f.calc_center_median().x > 0.3])
+    me = bpy.data.meshes.new("short2")
+    bm.to_mesh(me); bm.free()
+    obj = bpy.data.objects.new("short2", me)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    return obj
+
+
+def make_needle_on_border():
+    """A needle triangle in the selected half whose short edge (0.004) lies on x = 0 and belongs to an unselected
+    face too: dissolving the needle would take a vertex away from that face. Used with Merge Distance 0.01."""
+    coords = [(0, 0), (0, 0.004), (0.5, 0.002), (-0.5, 0), (-0.5, 0.004), (0.5, -0.5), (0.5, 0.5),
+              (-0.5, -0.5), (0, -0.5), (-0.5, 0.5), (0, 0.5)]
+    faces = [(0, 2, 1), (3, 0, 1, 4), (0, 5, 2), (1, 2, 6),
+             (7, 8, 0, 3), (4, 1, 10, 9), (8, 5, 0), (1, 6, 10)]
+    return _flat("needle", coords, faces)
+
+
+def make_grid_ngon():
+    """Sphere with a 4 x 2 block of quads dissolved into one curved 12-gon on the +X side: N-gons to Quads of the
+    full version opens it and refills the grid."""
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1)
+    obj = bpy.context.object
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    block = [f for f in bm.faces if f.calc_center_median().x > 0 and abs(f.calc_center_median().z) < 0.2
+             and abs(math.atan2(f.calc_center_median().y, f.calc_center_median().x)) < 0.35]
+    assert len(block) == 8, len(block)
+    bmesh.ops.dissolve_faces(bm, faces=block)
+    bm.to_mesh(obj.data); bm.free()
+    return obj
+
+
+def make_two_cubes():
+    """Two cubes (nothing to convert, no holes), both entered into multi-object Edit Mode."""
+    bpy.ops.mesh.primitive_cube_add(size=2); a = bpy.context.object
+    bpy.ops.mesh.primitive_cube_add(size=2, location=(4, 0, 0)); b = bpy.context.object
+    return a, b
+
+
+def make_linked_scans():
+    """One triangulated scan mesh used by two objects (a linked duplicate, Option+D)."""
+    a = make_triangulated_scan()
+    b = bpy.data.objects.new("linked", a.data); b.location = (4, 0, 0)
+    bpy.context.collection.objects.link(b)
+    return a, b
+

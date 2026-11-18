@@ -20,7 +20,7 @@ QuadFix Lite is a free, open-source Blender add-on that converts triangles and n
 | Button | What it does |
 |---|---|
 | **N-gons to Quads** | Triangulates curved n-gons and joins triangles into quads. Flat n-gons (caps, CAD faces) are left alone by default, so clean flat surfaces stay clean. |
-| **Clean & Quad** | One click after a Boolean or an import: merge doubles, remove degenerate and loose geometry, limited dissolve (keeps sharp edges and seams), tris to quads, recalculate normals. |
+| **Clean & Quad** | One click after a Boolean or an import: merge doubles, remove degenerate and loose geometry, limited dissolve (keeps sharp edges and seams), tris to quads, recalculate normals. On a partial selection the unselected faces never change and the cleaned part keeps the normal direction of its neighbours. Clean grids and pole caps are left alone. |
 | **Select Non-Quads & Holes** | Selects every triangle and n-gon and every open boundary edge, and prints the counts in the panel. |
 
 ## Lite vs Full
@@ -78,7 +78,9 @@ These need the full version, they are not in Lite.
 3. Select the faces you want to fix (or press `A`) and press **N-gons to Quads** or **Clean & Quad**.
 4. Read the before/after counts at the bottom of the panel. `Ctrl+Z` (`Cmd+Z` on Mac) undoes any step in one go.
 
-Untick **Only Selected** to process the whole mesh.
+Untick **Only Selected** to process the whole visible mesh (hidden geometry is never touched). With Only Selected on, select whole faces: vertices and edges on the border of the selection are left as they are, so the faces next to it do not change.
+
+Several objects in Edit Mode: **Clean & Quad** and **Select Non-Quads & Holes** work on all of them, **N-gons to Quads** works on the active object and says so in the report.
 
 ## When to use it
 
@@ -104,7 +106,7 @@ See the answer above: the angle limits and the compare options decide which pair
 Select the n-gons, triangulate them (`Ctrl+T`) and run Tris to Quads (`Alt+J`). **N-gons to Quads** does both in one click and skips flat n-gons on purpose. Flat n-gons are harmless unless you plan to subdivide or deform the mesh.
 
 ### How do I clean up a mesh after a Boolean in Blender?
-Merge by Distance, Limited Dissolve with a few degrees of angle, then Tris to Quads and recalculate normals. **Clean & Quad** runs that sequence, keeps sharp edges and seams, and reports vertex, quad, triangle and n-gon counts before and after.
+Merge by Distance, Limited Dissolve with a few degrees of angle, then Tris to Quads and recalculate normals (on a partial selection: keep the direction of the surrounding faces). **Clean & Quad** runs that sequence, keeps sharp edges and seams, and reports vertex, quad, triangle and n-gon counts before and after.
 
 ### How do I fix an AI-generated mesh (Meshy, Tripo, Hunyuan3D) in Blender?
 AI meshes usually arrive as dense triangle soup with duplicate vertices. Run **Select Non-Quads & Holes** to see the state, then **Clean & Quad**, then **N-gons to Quads** (turn **Keep Planar N-gons** off and try **Aggressive Quads** for scans). This repairs the mesh you have, it does not rebuild edge flow.
@@ -125,7 +127,7 @@ No. Pure Python with Blender's own `bmesh`, no internet access, no dependencies.
 
 | Option | Default | Meaning |
 |---|---|---|
-| Only Selected | on | Restrict to the selection (off = whole mesh) |
+| Only Selected | on | Work on the selected faces only (off = the whole visible mesh) |
 | Face Angle | 90 deg | Max angle between two triangle normals to join them |
 | Shape Angle | 90 deg | Max deviation from a rectangle to accept a quad |
 | Keep Planar N-gons | on | Leave flat n-gons untouched, convert only curved ones and triangles |
