@@ -316,3 +316,66 @@ def make_two_objects():
     a = make_holed_sphere(); a.location = (-2, 0, 0)
     b = make_holed_sphere(); b.location = (2, 0, 0)
     return a, b
+
+
+# ------------------------------------------------------------- partial selection / several objects
+
+def make_inside_out_junk():
+    """Sphere turned inside out, half of it triangulated: a selected part must keep facing the way its
+    unselected neighbours face (a normals recalc of the open selected patch would turn it outwards)."""
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, radius=1)
+    obj = bpy.context.object
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if f.calc_center_median().y > 0 and len(f.verts) == 4])
+    bmesh.ops.reverse_faces(bm, faces=bm.faces[:])
+    bm.to_mesh(obj.data); bm.free()
+    return obj
+
+
+def make_short_border_edge():
+    """Flat grid with an edge shorter than the merge distance lying on x = 0, the border of the "half" selection,
+    and triangles on the selected side: the short edge belongs to unselected faces too and must stay."""
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=8, y_segments=8, size=1.0)
+    for v in bm.verts:
+        if abs(v.co.x) < 1e-6 and abs(v.co.y - 0.25) < 1e-6:
+            v.co.y = 0.00005
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if f.calc_center_median().x > 0.3])
+    me = bpy.data.meshes.new("short")
+    bm.to_mesh(me); bm.free()
+    obj = bpy.data.objects.new("short", me)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    return obj
+
+
+def make_marked_ai_like():
+    """The decimated Suzanne with two materials, seams and sharp edges (and its UVs): none of it may change
+    on unselected faces."""
+    obj = make_ai_like_mesh()
+    for name in ("A", "B"):
+        obj.data.materials.append(bpy.data.materials.new(name))
+    random.seed(5)
+    bm = bmesh.new(); bm.from_mesh(obj.data)
+    for f in bm.faces:
+        f.material_index = 1 if f.calc_center_median().z > 0 else 0
+    for e in bm.edges:
+        r = random.random()
+        if r < 0.05: e.seam = True
+        elif r < 0.10: e.smooth = False
+    bm.to_mesh(obj.data); bm.free()
+    return obj
+
+
+def make_two_junk():
+    """Two boolean results, both entered into multi-object Edit Mode."""
+    a = make_boolean_junk()
+    b = make_boolean_junk(); b.location = (4, 0, 0)
+    return a, b
+
+
+def make_two_scans():
+    """Two triangulated scans, both entered into multi-object Edit Mode."""
+    a = make_triangulated_scan()
+    b = make_triangulated_scan(); b.location = (4, 0, 0)
+    return a, b
