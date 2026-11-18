@@ -6,14 +6,14 @@ Website: https://mendboxstudio.com/addons/quadfix · Full manual: https://mendbo
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 [![Latest release](https://img.shields.io/github/v/release/mendbox/quadfix-lite)](https://github.com/mendbox/quadfix-lite/releases/latest)
 
-**Full version — all 6 tools: Fill Holes with Quads, Bridge to Quads, Union to Quads, N-gons to Quads, Clean & Quad, Select Non-Quads & Holes → [Gumroad](https://quadfix.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
+**Full version — all 6 tools: Fill Holes with Quads, Bridge to Quads, Union to Quads, N-gons to Quads, Clean & Quad, Select Non-Quads & Holes → [Gumroad](https://mendbox.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
 
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
 [Download the latest release](https://github.com/mendbox/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/h_6LSHC6sQY)
 
 ![Blender fill holes with quads: QuadFix closes holes with a clean quad grid instead of a triangle fan](docs/media/quadfix-holes.gif)
-*Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://quadfix.gumroad.com/l/quadfix).*
+*Fill Holes with Quads (full version): holes closed with a clean quad grid, no triangle fan. [Get it on Gumroad](https://mendbox.gumroad.com/l/quadfix).*
 
 ## What Lite does
 
@@ -35,7 +35,7 @@ QuadFix Lite is a free, open-source Blender add-on that converts triangles and n
 | **Bridge to Quads** (loops with different vertex counts) | no | yes |
 | **Union to Quads** (Boolean union, seam rebuilt as quads) | no | yes |
 
-Lite stays free and complete for everything marked "yes". Get the full version on [Gumroad](https://quadfix.gumroad.com/l/quadfix) or [Superhive](https://superhivemarket.com/products/quadfix).
+Lite stays free and complete for everything marked "yes". Get the full version on [Gumroad](https://mendbox.gumroad.com/l/quadfix) or [Superhive](https://superhivemarket.com/products/quadfix).
 
 ## Gallery (Lite features)
 
@@ -94,7 +94,7 @@ Several objects in Edit Mode: **Clean & Quad** and **Select Non-Quads & Holes** 
 ## FAQ
 
 ### How do I fill holes with quads in Blender?
-Blender's **Grid Fill** (Face > Grid Fill) works on one boundary loop with an even number of edges. For many holes or odd loops you have to fix them one by one. Lite does not fill holes. The full QuadFix adds **Fill Holes with Quads**, which closes holes with a quad grid and handles odd loops: [Gumroad](https://quadfix.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix).
+Blender's **Grid Fill** (Face > Grid Fill) works on one boundary loop with an even number of edges. For many holes or odd loops you have to fix them one by one. Lite does not fill holes. The full QuadFix adds **Fill Holes with Quads**, which closes holes with a quad grid and handles odd loops: [Gumroad](https://mendbox.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix).
 
 ### How do I convert triangles to quads in Blender?
 Select the faces and use **Face > Tris to Quads** (`Alt+J`). It only joins pairs of neighbouring triangles whose angles are within *Max Face Angle* and *Max Shape Angle*, and options such as *Compare Seams / Sharp / UVs / Materials* block joins across those borders. QuadFix Lite's **N-gons to Quads** joins triangles with adjustable angles, and **Aggressive Quads** joins any two triangles regardless of angle when you want the fewest triangles.
