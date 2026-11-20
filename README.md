@@ -118,7 +118,7 @@ AI meshes usually arrive as dense triangle soup with duplicate vertices. Run **S
 No. It repairs the mesh you have and does not rebuild edge flow. On dense scans some triangles will remain. For automatic retopology use a remesher such as Quad Remesher, QRemeshify or Blender's own Quadriflow.
 
 ### Does it work with Blender 5.x?
-Yes. The test suite (38 checks on Boolean, scan, AI-like and attributed meshes, with vertex, edge and face select modes, partial selections and undo) passes on Blender 4.2.23, 4.5.14 and 5.2.2, on macOS and Windows 11. The suite also checks that UV maps, vertex groups and colour attributes are still there afterwards.
+Yes. The test suite (38 checks on Boolean, scan, AI-like and attributed meshes, with vertex, edge and face select modes, partial selections and undo) passes on Blender 4.2.23, 4.5.14 and 5.2.2, on macOS, Windows 11 and Linux. The suite also checks that UV maps, vertex groups and colour attributes are still there afterwards.
 
 ### Does it phone home or need extra libraries?
 No. Pure Python with Blender's own `bmesh`, no internet access, no dependencies.
@@ -141,7 +141,7 @@ No. Pure Python with Blender's own `bmesh`, no internet access, no dependencies.
 - Not a remesher and not an automatic retopology tool.
 - Lite does not fill holes, bridge loops or union meshes (see Lite vs Full above).
 - Very irregular meshes and dense scans keep some triangles. Try **Aggressive Quads** if you prefer fewer triangles over regular shapes.
-- Works on Windows, macOS and Linux (Blender 4.2 LTS and newer). Tested on macOS and Windows 11 (x86-64).
+- Works on Windows, macOS and Linux (Blender 4.2 LTS and newer). Tested on macOS, Windows 11 (x86-64) and Linux (x86-64).
 
 ## Development
 
