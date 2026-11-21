@@ -8,6 +8,8 @@ Website: https://mendboxstudio.com/addons/quadfix · Full manual: https://mendbo
 
 **Full version — all 6 tools: Fill Holes with Quads, Bridge to Quads, Union to Quads, N-gons to Quads, Clean & Quad, Select Non-Quads & Holes → [Gumroad](https://mendbox.gumroad.com/l/quadfix) | [Superhive](https://superhivemarket.com/products/quadfix)**
 
+Also on Blendkit (installs from inside Blender): [Lite](https://www.blendkit.com/asset-gallery-detail/6adfa8dd-92c5-42b8-8cbb-8956e045fd1d/) | [full version](https://www.blendkit.com/asset-gallery-detail/c6596556-7e49-4c4f-ba6f-7751f19bea54/)
+
 QuadFix Lite is a free, open-source Blender add-on that converts triangles and n-gons to quads, cleans up meshes after Boolean cuts and imports (STL, OBJ, FBX, CAD, 3D scans, AI-generated meshes), and shows which faces are still not quads. Three buttons, no settings to learn, works on a selection or on the whole mesh. For Blender 4.2 LTS, 4.5 LTS and 5.x.
 
 [Download the latest release](https://github.com/mendbox/quadfix-lite/releases/latest) · [Trailer of the full version on YouTube](https://youtu.be/h_6LSHC6sQY)
