@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 import os
+import textwrap
 import tomllib
 from bpy.types import Panel
+
+FULL_URL = "https://mendbox.gumroad.com/l/quadfix"
+FULL_TEXT = "Full version fills holes with a clean quad grid (no triangle fans) and bridges two edge loops with quads."
 
 
 def _version():
@@ -13,6 +17,13 @@ def _version():
 
 
 VERSION = _version()
+
+
+def wrapped(layout, context, text, icon):
+    """A label cuts long text with "..."; this breaks it into lines that fit the sidebar."""
+    chars = max(16, int((context.region.width - 70) / (7.5 * context.preferences.system.ui_scale)))
+    for n, line in enumerate(textwrap.wrap(text, chars)):
+        layout.label(text=line, icon=icon if n == 0 else "BLANK1")
 
 
 class QUADFIXLITE_PT_panel(Panel):
@@ -46,8 +57,10 @@ class QUADFIXLITE_PT_panel(Panel):
         if p.report:
             col.separator()
             col.label(text=p.report, icon="INFO")
-        col.separator()
-        col.label(text=f"QuadFix Lite v{VERSION}")
+        box = self.layout.box()
+        wrapped(box, context, FULL_TEXT, "INFO")
+        box.operator("wm.url_open", text="Get the full version", icon="URL").url = FULL_URL
+        self.layout.label(text=f"QuadFix Lite v{VERSION}")
 
 
 classes = (QUADFIXLITE_PT_panel,)

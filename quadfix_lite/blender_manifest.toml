@@ -1,6 +1,6 @@
 schema_version = "1.0.0"
 id = "quadfix_lite"
-version = "1.0.3"
+version = "1.0.4"
 name = "QuadFix Lite - N-gons to Quads and Mesh Cleanup"
 tagline = "N-gons to quads, boolean and import cleanup, select non-quads"
 maintainer = "Mendbox Studio"
